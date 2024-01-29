@@ -57,9 +57,9 @@ class CTSecurityScanRouter
 
 class CTSecurityScanView
 {
-    public static $preloadUrl = "https://raw.githubusercontent.com/CleanTalk/ct-security-scan/main/preload.html";
+    public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/preload.html";
     // public static $preloadUrl = "preload.html";
-    public static $scanUrl = "https://raw.githubusercontent.com/CleanTalk/ct-security-scan/main/scan.html";
+    public static $scanUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/scan.html";
     // public static $scanUrl = "scan.html";
 
     public static function renderPreload()
