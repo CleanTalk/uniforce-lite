@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <style>
+    .board {
+      position: relative;
+      background-color: #F0F8FF;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      border-radius: 3px;
+      padding-bottom: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body style="background-color: #3487C9; color: #444;">
+  <div class="container">
+    <div class="row" style="margin-top: 80px;">
+      <div class="col-sm-12 board">
+        <div style="position: absolute; top: -50px; text-align: center; width: 100%;">
+            <img src="https://github.com/svfcode/ct-sec-scan/blob/main/logo.png?raw=true" alt="Cleantalk logo" style="height: 100px;">
+        </div>
+        <div style="text-align: center; margin-top: 70px;">
+            <h3> - Cleantalk Security Scanner - </h3>
+        </div>
+        <div class="mt-4" style="text-align: center; width: 100%;">
+          <button type="button" class="btn btn-primary">Perform scan</button>
+        </div>
+
+        <div class="progress mt-4 center" style="width: 75%; margin-left: 12%;" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+          <div id="progress_main" class="progress-bar" style="width: 25%">25%</div>
+        </div>
+
+        <div class="card mt-4">
+        <p id="help_text" class="mt-2">Process of scanning, please don't leave this page.</p>
+          <div class="card-body">
+            <table id="verdict" class="table table-striped d-none">
+              <tr>
+                <th>path</th>
+                <th>detected</th>
+                <th>last modified</th>
+              </tr>
+            </table>
+          </div>
+          <div id="progress_log" class="card-body">
+            <div class="card" style="max-height: 300px; overflow: auto;">
+              <table class="table table-striped-columns">
+                <tr>
+                  <th>stage</th>
+                  <th>result</th>
+                  <th>duration</th>
+                </tr>
+                <tr>
+                  <td>receiving signatures from cloud</td>
+                  <td>
+                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar" style="width: 25%">25%</div>
+                    </div>
+                  </td>
+                  <td>1s</td>
+                </tr>
+                <tr>
+                  <td>prepare file system</td>
+                  <td>
+                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar" style="width: 25%">25%</div>
+                    </div>
+                  </td>
+                  <td>1s</td>
+                </tr>
+                <tr>
+                  <td>check signatures</td>
+                  <td>
+                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar" style="width: 25%">25%</div>
+                    </div>
+                  </td>
+                  <td>1s</td>
+                </tr>
+              </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    let verdict = [];
+    function runStage(stage) {
+      $.ajax({
+          url: document.location.href,
+          method: 'POST',
+          dataType: 'json',
+          async: false,
+          data: {
+            "method": stage
+          },
+          success: function(data){
+            console.log(data)
+            if (stage === 'check_signatures') {
+              verdict = data['verdict'];
+            }
+          },
+          error: function(a, b, c) {
+            console.log(a,b,c)
+          }
+      });
+    }
+
+    function renderVerdict() {
+      console.log(verdict);
+
+      $('#progress_log').addClass('d-none');
+      $('#verdict').removeClass('d-none');
+      $('#progress_main').width('100%');
+      $('#progress_main').text('100%');
+
+      if (verdict.length > 0) {
+        let txt = 'You have a malware on site, please use <a href="https://cleantalk.org/help/install-uniforce-security" target="_blank">Uniforce</a> full version to detect and autocure malweres.';
+        $('#help_text').html(txt).css({'color': 'red'});
+
+      }
+
+      let content = '';
+      verdict.forEach(el => {
+        content += [
+          '<tr>',
+          '<td>',
+          el[0],
+          '</td>',
+          '<td>',
+          el[1],
+          '</td>',
+          '<td>',
+          new Date(el[2] * 1000).toLocaleString("en-US"),
+          '</td>',
+          '</td>',
+        ].join('');
+      });
+      $('#verdict tr:last').after(content);
+    }
+
+    let stages = [
+      'prepare_file_system',
+      'receive_signatures',
+      'make_file_system_cast',
+      'check_signatures',
+    ];
+
+    $(document).ready(function() {
+      stages.forEach(stage => {
+        runStage(stage);
+      });
+
+      renderVerdict();
+    });
+  </script>
+</body>
+</html>
