@@ -158,7 +158,9 @@
         runStage(stage);
       });
 
-      renderVerdict();
+      if (verdict.length > 0) {
+        renderVerdict();
+      }
     });
   </script>
 </body>

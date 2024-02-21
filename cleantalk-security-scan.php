@@ -111,6 +111,7 @@ class CTSecurityScanService
     public static function generateToken()
     {
         $token = md5(rand(1000, 9999));
+        $token = substr($token, 0, 6);
         rename(__FILE__, substr(__FILE__, 0, -4) . '_' . $token . '.php');
 
         return $token;
@@ -203,7 +204,7 @@ class CTSecurityScanService
                 return ['status' => 'Fail', 'error' => 'file not readable'];
             }
             if (!self::checkFileSize($path)) {
-                return ['status' => 'Fail', 'error' => 'file size zero or too large'];
+                continue;
             }
 
             $hash = md5(file_get_contents($path));
