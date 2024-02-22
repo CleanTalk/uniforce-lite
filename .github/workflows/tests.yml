@@ -32,24 +32,13 @@ jobs:
         with:
           php-version: ${{ env.PHP_VERSION }}
 
-      - name: Run MySQL server
-        run: sudo systemctl start mysql
-
       - name: Code Checkout
         uses: actions/checkout@v4
-
-      - name: Make the script files executable
-        run: chmod +x ./tests/wp-test-setup.sh
-
-      - name: Install WP develop
-        run: ./tests/wp-test-setup.sh wordpress_test root root localhost latest
 
       - name: Install Dependencies
         run: composer i
 
       - name: Running tests
-        env:
-          CLEANTALK_TEST_API_KEY: ${{ secrets.CLEANTALK_TEST_API_KEY }}
         run: composer test
 
       - name: Telegram notify
