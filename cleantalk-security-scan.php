@@ -4,6 +4,11 @@ CTSecurityScanRouter::matchRoute();
 
 class CTSecurityScanRouter
 {
+    /**
+     * Simple http router.
+     *
+     * @return void
+     */
     public static function matchRoute()
     {
         if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
@@ -48,6 +53,13 @@ class CTSecurityScanRouter
         exit();
     }
 
+    /**
+     * Output the JSON response.
+     *
+     * @param array $data
+     *
+     * @return void
+     */
     private static function resp($data = ["status" => "OK"])
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -57,58 +69,116 @@ class CTSecurityScanRouter
 
 class CTSecurityScanView
 {
+    /**
+     * @var string
+     */
     public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/preload.html";
-    // public static $preloadUrl = "preload.html";
+
+    /**
+     * @var string
+     */
     public static $scanUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/scan.html";
 
-    // public static $scanUrl = "scan.html";
-
+    /**
+     * Render preload HTML layout.
+     *
+     * @return array|string|null
+     */
     public static function renderPreload()
     {
+        // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         $preload = file_get_contents(self::$preloadUrl);
         $token = CTSecurityScanService::generateToken();
         $html_addition = '<script>var ct_sec_token = "' . $token . '";</script>';
         $preload = preg_replace('/<\/body>(\s|<.*>)*<\/html>\s*$/i', $html_addition . '</body></html>', $preload, 1);
 
+        // @ToDo The method have to return only a `string`. Other types must be handled as errors.
         return $preload;
     }
 
+    /**
+     * Render Scanner HTML layout.
+     *
+     * @return false|string
+     */
     public static function renderScanPage()
     {
+        // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
+        // @ToDo The method have to return only a `string`. Other types must be handled as errors.
         return file_get_contents(self::$scanUrl);
     }
 }
 
 class CTSecurityScanHandler
 {
+    /**
+     * Download and store signatures list.
+     *
+     * @return string[]
+     */
     public static function receiveSignatures()
     {
         $result = CTSecurityScanService::receiveSignatures();
         return $result ? ['status' => 'OK'] : ['status' => 'Fail'];
     }
 
+    /**
+     * Find and store files to be scanned.
+     *
+     * @return string[]
+     */
     public static function makeFSCast()
     {
         $result = CTSecurityScanService::makeFSCast();
         return $result ? ['status' => 'OK'] : ['status' => 'Fail'];
     }
 
+    /**
+     * Check files by signature analysis.
+     *
+     * @return array|string[]
+     */
     public static function checkSignatures()
     {
         $result = CTSecurityScanService::checkSignatures();
-        // return $result ? ['status' => 'OK'] : ['status' => 'Fail'];
+
+        // @ToDo Handle error here
         return $result;
     }
 }
 
 class CTSecurityScanService
 {
+    /**
+     * @var string
+     */
     private static $signatures_url = 'https://cleantalk-security.s3.amazonaws.com/security_signatures/security_signatures_v2.csv.gz';
+
+    /**
+     * @var string
+     */
     private static $signatures_file = 'signatures.csv';
+
+    /**
+     * @var string
+     */
     private static $scan_file = 'scan.csv';
+
+    /**
+     * @var string[]
+     */
     private static $extensions = ['php'];
+
+    /**
+     * @var int
+     */
     private static $max_file_size = 2621440; // 2.5 MB
 
+    /**
+     * Security unique token generating.
+     *
+     * @return string
+     */
     public static function generateToken()
     {
         $token = md5((string)rand(1000, 9999));
@@ -118,6 +188,12 @@ class CTSecurityScanService
         return $token;
     }
 
+    /**
+     * Checking if the main file contains unique hash in its filename.
+     * Simple: is the application was installed and is ready to work.
+     *
+     * @return bool
+     */
     public static function isHashExist()
     {
         if ( basename(__FILE__) === 'cleantalk-security-scan.php' ) {
@@ -127,6 +203,11 @@ class CTSecurityScanService
         return true;
     }
 
+    /**
+     * Makes new folder to contain scanner data.
+     *
+     * @return void
+     */
     public static function prepareFS()
     {
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
@@ -136,6 +217,11 @@ class CTSecurityScanService
         }
     }
 
+    /**
+     * Getting signatures wrapper.
+     *
+     * @return bool
+     */
     public static function receiveSignatures()
     {
         $signatures = file_get_contents(self::$signatures_url);
@@ -153,6 +239,11 @@ class CTSecurityScanService
         return true;
     }
 
+    /**
+     * Find files to be scanned wrapper.
+     *
+     * @return true
+     */
     public static function makeFSCast()
     {
         $iterator = new \RecursiveIteratorIterator(
@@ -185,6 +276,11 @@ class CTSecurityScanService
         return true;
     }
 
+    /**
+     * Signature analyser.
+     *
+     * @return array|string[]
+     */
     public static function checkSignatures()
     {
         if ( !function_exists('md5') ) {
@@ -240,6 +336,12 @@ class CTSecurityScanService
         unlink($file);
     }
 
+    /**
+     * Checking file size against allowed value `max_file_size`.
+     *
+     * @param string $path
+     * @return bool
+     */
     private static function checkFileSize($path)
     {
         $file_size = filesize($path);
