@@ -124,11 +124,17 @@
       if (verdict.length > 0) {
         let txt = 'You have a malware on site, please use <a href="https://cleantalk.org/help/install-uniforce-security" target="_blank">Uniforce</a> full version to detect and autocure malweres.';
         $('#help_text').html(txt).css({'color': 'red'});
-
       }
 
       let content = '';
+      let d, minutes, seconds, date;
+      shortMonthName = new Intl.DateTimeFormat("en-US", { month: "short" }).format;
       verdict.forEach(el => {
+        d = new Date(Number(el[2]) * 1000);
+        minutes = String(d.getMinutes()).padStart(2, '0');
+        seconds = String(d.getSeconds()).padStart(2, '0');
+        date = shortMonthName(d) + ' ' + d.getDate() + ' ' + d.getFullYear() + ' ' + d.getHours() + ':' + minutes + ':' + seconds;
+
         content += [
           '<tr>',
           '<td>',
@@ -138,7 +144,7 @@
           el[1],
           '</td>',
           '<td>',
-          new Date(el[2] * 1000).toLocaleString("en-US"),
+          date,
           '</td>',
           '</td>',
         ].join('');
