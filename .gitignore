@@ -1,7 +1,10 @@
 /*
 !/.github
 !/.github/*
+!/tests
+!/tests/*
 !/README.md
+!/composer.json
 !/cleantalk-security-scan.php
 !/preload.html
 !/scan.html

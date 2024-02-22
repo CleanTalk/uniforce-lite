@@ -6,18 +6,18 @@ class CTSecurityScanRouter
 {
     public static function matchRoute()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             $methods = [
                 'prepare_file_system',
                 'receive_signatures',
                 'make_file_system_cast',
                 'check_signatures',
             ];
-            if (!isset($_POST['method']) || !in_array($_POST['method'], $methods)) {
+            if ( !isset($_POST['method']) || !in_array($_POST['method'], $methods) ) {
                 exit();
             }
 
-            switch($_POST['method']) {
+            switch ( $_POST['method'] ) {
                 case 'prepare_file_system':
                     CTSecurityScanService::prepareFS();
                     self::resp();
@@ -39,7 +39,7 @@ class CTSecurityScanRouter
             exit();
         }
 
-        if (!CTSecurityScanService::isHashExist()) {
+        if ( !CTSecurityScanService::isHashExist() ) {
             echo CTSecurityScanView::renderPreload();
             exit();
         }
@@ -53,13 +53,14 @@ class CTSecurityScanRouter
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data);
     }
-} 
+}
 
 class CTSecurityScanView
 {
     public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/preload.html";
     // public static $preloadUrl = "preload.html";
     public static $scanUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/scan.html";
+
     // public static $scanUrl = "scan.html";
 
     public static function renderPreload()
@@ -67,7 +68,7 @@ class CTSecurityScanView
         $preload = file_get_contents(self::$preloadUrl);
         $token = CTSecurityScanService::generateToken();
         $html_addition = '<script>var ct_sec_token = "' . $token . '";</script>';
-        $preload = preg_replace('/<\/body>(\s|<.*>)*<\/html>\s*$/i', $html_addition.'</body></html>', $preload, 1);
+        $preload = preg_replace('/<\/body>(\s|<.*>)*<\/html>\s*$/i', $html_addition . '</body></html>', $preload, 1);
 
         return $preload;
     }
@@ -76,7 +77,7 @@ class CTSecurityScanView
     {
         return file_get_contents(self::$scanUrl);
     }
-} 
+}
 
 class CTSecurityScanHandler
 {
@@ -98,7 +99,7 @@ class CTSecurityScanHandler
         // return $result ? ['status' => 'OK'] : ['status' => 'Fail'];
         return $result;
     }
-} 
+}
 
 class CTSecurityScanService
 {
@@ -107,10 +108,10 @@ class CTSecurityScanService
     private static $scan_file = 'scan.csv';
     private static $extensions = ['php'];
     private static $max_file_size = 2621440; // 2.5 MB
-    
+
     public static function generateToken()
     {
-        $token = md5(rand(1000, 9999));
+        $token = md5((string)rand(1000, 9999));
         $token = substr($token, 0, 6);
         rename(__FILE__, substr(__FILE__, 0, -4) . '_' . $token . '.php');
 
@@ -119,7 +120,7 @@ class CTSecurityScanService
 
     public static function isHashExist()
     {
-        if (basename(__FILE__) === 'cleantalk-security-scan.php') {
+        if ( basename(__FILE__) === 'cleantalk-security-scan.php' ) {
             return false;
         }
 
@@ -129,7 +130,7 @@ class CTSecurityScanService
     public static function prepareFS()
     {
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-        if (!is_dir($dir_name)) {
+        if ( !is_dir($dir_name) ) {
             mkdir($dir_name);
             file_put_contents($dir_name . 'index.php', '<?php' . PHP_EOL);
         }
@@ -139,13 +140,13 @@ class CTSecurityScanService
     {
         $signatures = file_get_contents(self::$signatures_url);
         $content = @gzdecode($signatures);
-        if ($content === false) {
+        if ( $content === false ) {
             return false;
         }
 
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
         $write_result = @file_put_contents($dir_name . self::$signatures_file, $content);
-        if ($write_result === false) {
+        if ( $write_result === false ) {
             return false;
         }
 
@@ -162,8 +163,8 @@ class CTSecurityScanService
 
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
         $fp = fopen($dir_name . self::$scan_file, 'w');
-        foreach ($iterator as $path => $dir) {
-            if (in_array($dir->getExtension(), self::$extensions)) {
+        foreach ( $iterator as $path => $dir ) {
+            if ( in_array($dir->getExtension(), self::$extensions) ) {
                 $mtime = @filemtime((string)$path);
                 if ( empty($mtime) ) {
                     clearstatcache($path);
@@ -186,7 +187,7 @@ class CTSecurityScanService
 
     public static function checkSignatures()
     {
-        if (!function_exists('md5')) {
+        if ( !function_exists('md5') ) {
             return ['status' => 'Fail', 'error' => 'function md5 not exist'];
         }
 
@@ -195,24 +196,24 @@ class CTSecurityScanService
 
         $signatures = array_map('str_getcsv', explode("\n", file_get_contents($dir_name . self::$signatures_file)));
         $verdict = [];
-        while ($file = fgetcsv($scan)) {
+        while ( $file = fgetcsv($scan) ) {
             $path = $file[0];
-            if (!file_exists($path)) {
+            if ( !file_exists($path) ) {
                 return ['status' => 'Fail', 'error' => 'file not exist'];
             }
-            if (!is_readable($path)) {
+            if ( !is_readable($path) ) {
                 return ['status' => 'Fail', 'error' => 'file not readable'];
             }
-            if (!self::checkFileSize($path)) {
+            if ( !self::checkFileSize($path) ) {
                 continue;
             }
 
             $hash = md5(file_get_contents($path));
 
 
-            foreach ((array)$signatures as $signature) {
-                if ($signature[3] === "'FILE'") {
-                    if ("'$hash'" === $signature[2]) {
+            foreach ( $signatures as $signature ) {
+                if ( $signature[3] === "'FILE'" ) {
+                    if ( "'$hash'" === $signature[2] ) {
                         $verdict[] = [$path, $signature[1], $file[1]];
                     }
                 }
@@ -227,13 +228,13 @@ class CTSecurityScanService
     private static function checkFileSize($path)
     {
         $file_size = filesize($path);
-        if (!(int)$file_size) {
+        if ( !(int)$file_size ) {
             return false;
         }
-        if ((int)$file_size > self::$max_file_size) {
+        if ( (int)$file_size > self::$max_file_size ) {
             return false;
         }
 
         return true;
     }
-} 
+}
