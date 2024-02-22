@@ -221,8 +221,23 @@ class CTSecurityScanService
         }
         fclose($scan);
 
+        unlink($dir_name . self::$signatures_file);
+        self::compress($dir_name . self::$scan_file);
 
         return ['status' => 'OK', 'verdict' => $verdict];
+    }
+
+    private static function compress($file)
+    {
+        if ( ! function_exists('gzopen')) {
+            return;
+        }
+
+        $gz = gzopen($file . '.gz', 'w9');
+        gzwrite($gz, file_get_contents($file));
+        gzclose($gz);
+
+        unlink($file);
     }
 
     private static function checkFileSize($path)
