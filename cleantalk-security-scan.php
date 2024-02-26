@@ -323,11 +323,19 @@ class CTSecurityScanService
         return ['status' => 'OK', 'verdict' => $verdict];
     }
 
+    /**
+     * Compressing file to archive
+     *
+     * @param string $file
+     * @return void
+     */
     private static function compress($file)
     {
         if ( ! function_exists('gzopen')) {
             return;
         }
+
+        //@ToDo check the file existence
 
         $gz = gzopen($file . '.gz', 'w9');
         gzwrite($gz, file_get_contents($file));
