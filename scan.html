@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan</title>
+  <title>Unifroce one-click, free malware scanner</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <style>
     .board {
@@ -13,6 +13,23 @@
       border-radius: 3px;
       padding-bottom: 20px;
       text-align: center;
+    }
+
+    .block-legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    .block-legend-ps {
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .column-legend {
+      width: 45%;
+      text-align: left;
     }
   </style>
 </head>
@@ -24,7 +41,7 @@
             <img src="https://github.com/svfcode/ct-sec-scan/blob/main/logo.png?raw=true" alt="Cleantalk logo" style="height: 100px;">
         </div>
         <div style="text-align: center; margin-top: 70px;">
-            <h3> - Cleantalk Security Scanner - </h3>
+            <h1> - Free malware scanner is ready to go - </h1>
         </div>
         <div class="mt-4" style="text-align: center; width: 100%;">
           <button type="button" class="btn btn-primary">Perform scan</button>
@@ -35,7 +52,7 @@
         </div>
 
         <div class="card mt-4">
-        <p id="help_text" class="mt-2">Process of scanning, please don't leave this page.</p>
+          <p id="help_text" class="mt-2">Process of scanning, please don't leave this page.</p>
           <div class="card-body">
             <table id="verdict" class="table table-striped d-none">
               <tr>
@@ -82,8 +99,89 @@
                 </tr>
               </table>
           </div>
-        </div>
 
+          <div class="block-legend">
+            <div class="column-legend">
+              <ul>
+                <h4>Available actions on the found files:</h4>
+                <li>
+                  <strong>Delete:</strong> 
+                  Delete the chosen file from your website file system in a safe way. You should be careful with this action as there is no turing back.
+                </li>
+                <li>
+                  <strong>View:</strong> 
+                  View the chosen file.
+                </li>
+                <li>
+                  <strong>Send for Analysis:</strong> 
+                  Send the chosen file to the Security by CleanTalk Cloud for analysis.
+                </li>
+                <li>
+                  <strong>Approve:</strong> 
+                  Approve the chosen file so it will not be scanned again. You can always disapprove it in the "Approved" category.
+                </li>
+                <li>
+                  <strong>Quarantine:</strong> 
+                  Put the chosen file to quarantine where it can not harm the website.
+                </li>
+                <li>
+                  <strong>Replace:</strong> 
+                  Restore the initial state of the chosen file if the file is accessible. It applies only to the WordPress core files.
+                </li>
+                <li>
+                  <strong>Compare:</strong> 
+                  View the difference between the original WordPress core file and the one you have in your website.
+                </li>
+                <li>
+                  <strong>View Malicious Code:</strong> 
+                  View malicious code that was found by the scanner, so you can inspect it more clearly.
+                </li>
+                The actions are available only after scanning your website.
+              </ul>
+            </div>
+            <div class="column-legend">
+              <div id="spbcscan-results-log-caption">
+                <h4>File Scan Results:</h4>
+                <p>
+                  <b>OK</b> - file is fine.
+                </p>
+                <p>
+                  <b>APPROVED</b> - file is approved by the user.
+                </p>
+                <p>
+                  <b>APPROVED_BY_CT</b> - file is approved by Security by CleanTalk.
+                </p>
+                <p>
+                  <b>MODIFIED</b> - file is different from the original one.
+                </p>
+                <p>
+                  <b>INFECTED</b> - file is infected.
+                </p>
+                <p>
+                  <b>QUARANTINED</b> - file has been quarantined.
+                </p>
+                <p>
+                  <b>UNKNOWN</b> - file of unknown origin.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="block-legend-ps">
+            <p>
+              * Website total files - only executable files (*.php, *.html, *.htm, *.phtml, *.shtml, *.phar, *.odf) except for 
+              the quarantined files, files of zero size and files larger than the acceptable size (2 MB).
+              Files scanned - files have been checked. Some files will be added to the scan if the scanner deems it necessary.
+            </p>
+            <p>
+              This version of Uniforce just a malware scanner that you have to run it yourself. If you need Automatically daily 
+              scans, Brute-Force protection, Web application firewall and Security FireWall you are welcome to download the full
+              version of Uniforce <a href="https://cleantalk.org/help/install-security">https://cleantalk.org/help/install-security</a>
+            </p>
+            <p>
+              Uniforce one-click malware scanner is product of CleanTalk Inc. Have questions? You are welcome at <a href="https://cleantalk.org/my/support/open">https://cleantalk.org/my/support/open</a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -107,8 +205,8 @@
               verdict = data['verdict'];
             }
           },
-          error: function(a, b, c) {
-            console.log(a,b,c)
+          error: function(a) {
+            console.log(a)
           }
       });
     }
