@@ -14,23 +14,6 @@
       padding-bottom: 20px;
       text-align: center;
     }
-
-    .block-legend {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-      font-size: 14px;
-    }
-
-    .block-legend-ps {
-      text-align: left;
-      font-size: 14px;
-    }
-
-    .column-legend {
-      width: 45%;
-      text-align: left;
-    }
   </style>
 </head>
 <body style="background-color: #3487C9; color: #444;">
@@ -100,75 +83,9 @@
               </table>
           </div>
 
-          <div class="block-legend">
-            <div class="column-legend">
-              <ul>
-                <h4>Available actions on the found files:</h4>
-                <li>
-                  <strong>Delete:</strong> 
-                  Delete the chosen file from your website file system in a safe way. You should be careful with this action as there is no turing back.
-                </li>
-                <li>
-                  <strong>View:</strong> 
-                  View the chosen file.
-                </li>
-                <li>
-                  <strong>Send for Analysis:</strong> 
-                  Send the chosen file to the Security by CleanTalk Cloud for analysis.
-                </li>
-                <li>
-                  <strong>Approve:</strong> 
-                  Approve the chosen file so it will not be scanned again. You can always disapprove it in the "Approved" category.
-                </li>
-                <li>
-                  <strong>Quarantine:</strong> 
-                  Put the chosen file to quarantine where it can not harm the website.
-                </li>
-                <li>
-                  <strong>Replace:</strong> 
-                  Restore the initial state of the chosen file if the file is accessible. It applies only to the WordPress core files.
-                </li>
-                <li>
-                  <strong>Compare:</strong> 
-                  View the difference between the original WordPress core file and the one you have in your website.
-                </li>
-                <li>
-                  <strong>View Malicious Code:</strong> 
-                  View malicious code that was found by the scanner, so you can inspect it more clearly.
-                </li>
-                The actions are available only after scanning your website.
-              </ul>
-            </div>
-            <div class="column-legend">
-              <div id="spbcscan-results-log-caption">
-                <h4>File Scan Results:</h4>
-                <p>
-                  <b>OK</b> - file is fine.
-                </p>
-                <p>
-                  <b>APPROVED</b> - file is approved by the user.
-                </p>
-                <p>
-                  <b>APPROVED_BY_CT</b> - file is approved by Security by CleanTalk.
-                </p>
-                <p>
-                  <b>MODIFIED</b> - file is different from the original one.
-                </p>
-                <p>
-                  <b>INFECTED</b> - file is infected.
-                </p>
-                <p>
-                  <b>QUARANTINED</b> - file has been quarantined.
-                </p>
-                <p>
-                  <b>UNKNOWN</b> - file of unknown origin.
-                </p>
-              </div>
-            </div>
-          </div>
           <div class="block-legend-ps">
             <p>
-              * Website total files - only executable files (*.php, *.html, *.htm, *.phtml, *.shtml, *.phar, *.odf) except for 
+              * Website total files - only executable files (*.php) except for 
               the quarantined files, files of zero size and files larger than the acceptable size (2 MB).
               Files scanned - files have been checked. Some files will be added to the scan if the scanner deems it necessary.
             </p>
