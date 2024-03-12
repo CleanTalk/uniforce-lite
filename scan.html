@@ -58,8 +58,8 @@
           <button type="button" class="btn btn-primary">Perform scan</button>
         </div>
 
-        <div class="progress mt-4 center" style="width: 75%; margin-left: 12%;" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-          <div id="progress_main" class="progress-bar" style="width: 25%">25%</div>
+        <div class="progress mt-4 center" style="width: 75%; margin-left: 12%;" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <div id="progress_main" class="progress-bar" style="width: 0%">0%</div>
         </div>
 
         <div class="card mt-4">
@@ -84,8 +84,8 @@
                 <tr>
                   <td>receiving signatures from cloud</td>
                   <td>
-                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-                      <div class="progress-bar" style="width: 25%">25%</div>
+                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar" id="receive_signatures" style="width: 0%">0%</div>
                     </div>
                   </td>
                   <td>1s</td>
@@ -93,8 +93,8 @@
                 <tr>
                   <td>prepare file system</td>
                   <td>
-                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-                      <div class="progress-bar" style="width: 25%">25%</div>
+                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar" id="prepare_file_system" style="width: 0%">0%</div>
                     </div>
                   </td>
                   <td>1s</td>
@@ -102,8 +102,8 @@
                 <tr>
                   <td>check signatures</td>
                   <td>
-                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-                      <div class="progress-bar" style="width: 25%">25%</div>
+                    <div class="progress mt-4 center" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar" id="check_signatures" style="width: 0%">0%</div>
                     </div>
                   </td>
                   <td>1s</td>
@@ -124,12 +124,13 @@
           url: document.location.href,
           method: 'POST',
           dataType: 'json',
-          async: false,
+          async: true,
           data: {
             "method": stage
           },
           success: function(data){
             console.log(data)
+            changeProgressBar(stage);
             if (stage === 'check_signatures') {
               verdict = data['verdict'];
             }
@@ -185,6 +186,23 @@
       'make_file_system_cast',
       'check_signatures',
     ];
+
+    function changeProgressBar(stage) {
+      let progressBar = $('#progress_main');
+      let quantityStage = stages.length;
+      let increaseValue = 100/quantityStage;
+      let currentValueMainBar = $('#progress_main')[0].parentElement.ariaValueNow;
+      let newValueMainBar = Number(increaseValue) + Number(currentValueMainBar);
+
+      $('#progress_main').attr('style', 'width:' + newValueMainBar + '%');
+      $('#progress_main').text(newValueMainBar + '%');
+      $('#progress_main')[0].parentElement.ariaValueNow = newValueMainBar;
+
+     if (stage != 'make_file_system_cast') {
+        $('#' + stage).width('100%');
+        $('#' + stage).text('100%');
+      }
+    }
 
     $(document).ready(function() {
       stages.forEach(stage => {
