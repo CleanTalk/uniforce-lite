@@ -115,9 +115,15 @@ class CTSecurityScanView
     {
         // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         // @ToDo The method have to return only a `string`. Other types must be handled as errors.
-        return !$dev_mode
-            ? file_get_contents(self::$scanUrl)
-            : file_get_contents(self::$devModeScanUrl);
+        if ($dev_mode) {
+            if (!file_exists(self::$devModeScanUrl)) {
+                @file_put_contents(self::$devModeScanUrl, file_get_contents(self::$scanUrl));
+            }
+            $work_file = self::$devModeScanUrl;
+        } else {
+            $work_file = file_get_contents(self::$scanUrl);
+        }
+        return file_get_contents($work_file);
     }
 }
 
