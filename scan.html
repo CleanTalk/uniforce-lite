@@ -319,11 +319,19 @@
       verdictElement.addClass('d-none');
     }
 
+    function restoreCounters() {
+      $('#total_site_files').text('');
+      $('#total_site_files_text').hide()
+      $('#scanned_files_counter').text('');
+      $('#scanned_files_counter_text').hide()
+    }
+
     function restorePageBeforeScan() {
       $('#help_text').html('Process of scanning, please don\'t leave this page.').css({"color": "black"});
       $('#scan_info_block').show();
       restoreProgressBar();
       restoreVerdict();
+      restoreCounters();
     }
 
     function ctSecurityScanReady() {
