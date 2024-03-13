@@ -142,7 +142,7 @@ class CTSecurityScanHandler
     public static function makeFSCast()
     {
         $result = CTSecurityScanService::makeFSCast();
-        return $result ? ['status' => 'OK'] : ['status' => 'Fail'];
+        return $result;
     }
 
     /**
@@ -265,7 +265,7 @@ class CTSecurityScanService
     /**
      * Find files to be scanned wrapper.
      *
-     * @return true
+     * @return array
      */
     public static function makeFSCast()
     {
@@ -274,6 +274,8 @@ class CTSecurityScanService
             \RecursiveIteratorIterator::SELF_FIRST,
             \RecursiveIteratorIterator::CATCH_GET_CHILD
         );
+
+        $total_site_files = 0;
 
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
         $fp = fopen($dir_name . self::$scan_file, 'w');
@@ -292,11 +294,12 @@ class CTSecurityScanService
                 }
 
                 fputcsv($fp, [$path, $mtime]);
+                $total_site_files++;
             }
         }
         fclose($fp);
 
-        return true;
+        return array('status' => 'OK', 'total_site_files' => $total_site_files);
     }
 
     /**
@@ -340,6 +343,7 @@ class CTSecurityScanService
 
         $signatures = array_map('str_getcsv', explode("\n", $signatures_content));
         $verdict = [];
+        $scanned_files_counter = 0;
         while ( $file = fgetcsv($scan) ) {
             $path = $file[0];
             if ( !file_exists($path) ) {
@@ -362,13 +366,15 @@ class CTSecurityScanService
                     }
                 }
             }
+
+            $scanned_files_counter++;
         }
         fclose($scan);
 
         unlink($dir_name . self::$signatures_file);
         self::compress($dir_name . self::$scan_file);
 
-        return ['status' => 'OK', 'verdict' => $verdict];
+        return ['status' => 'OK', 'verdict' => $verdict, 'scanned_files_counter' => $scanned_files_counter];
     }
 
     /**

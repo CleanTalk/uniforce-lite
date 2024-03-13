@@ -60,29 +60,41 @@
         </div>
         <div style="text-align: center; margin-top: 70px;">
             <h1> - Free malware scanner is ready to go - </h1>
-            <p>
+            <p style="padding: 0 5%;">
               The scanner checks executable files with extensions php. Files will be tested against known vulnerabilities
               and suspicious code. You will have a list of infected and suspicious files, as well as instructions to fix issues. It
               takes up to 3 minute per one thousand of files to scan.
             </p>
         </div>
         <div class="mt-4" style="text-align: center; width: 100%;">
-          <button type="button" class="btn btn-primary">Perform scan</button>
+          <button id="perform_scan_button" type="button" class="btn btn-primary">Perform scan</button>
         </div>
 
-        <div class="progress mt-4 center" style="width: 75%; margin-left: 12%;" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-          <div id="progress_main" class="progress-bar" style="width: 0%">0%</div>
+        <div id="progress_bar_wrapper" class="progress mt-4 center" style="width: 75%; margin-left: 12%; display: none" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <div id="progress_main" class="progress-bar" style="width: 0%;">0%</div>
         </div>
 
         <div class="card mt-4">
-          <p id="help_text" class="mt-2">Process of scanning, please don't leave this page.</p>
+          <div id="scan_info_block" style="padding: 2%; background: #FDFDFD; border: 1px solid #F1F1F1; display: none;">
+            <span id="help_text" class="mt-2">Process of scanning, please don't leave this page.</span>
+            <div>
+              <span id="total_site_files_text" style="display: none; padding-right: 5px">Website total files:
+                <span id="total_site_files"></span>
+              </span>
+              <span id="scanned_files_counter_text" style="display: none">Files Scanned:
+                <span id="scanned_files_counter"></span>
+              </span>
+            </div>
+          </div>
           <div class="card-body">
             <table id="verdict" class="table table-striped d-none">
-              <tr>
-                <th>path</th>
-                <th>detected</th>
-                <th>last modified</th>
-              </tr>
+              <tbody id="verdict_tbody">
+                <tr>
+                  <th>path</th>
+                  <th>detected</th>
+                  <th>last modified</th>
+                </tr>
+              </tbody>
             </table>
           </div>
           <div id="progress_log" class="card-body">
@@ -122,8 +134,10 @@
                 </tr>
               </table>
           </div>
+          </div>
 
-          <div class="block-legend-ps">
+
+          <div class="block-legend-ps" style="padding: 15px">
             <p>
               * Website total files - only executable files (*.php) except for
               the quarantined files, files of zero size and files larger than the acceptable size (2 MB).
@@ -141,11 +155,17 @@
         </div>
       </div>
     </div>
-  </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script>
     let verdict = [];
+    let stages = [
+      'prepare_file_system',
+      'receive_signatures',
+      'make_file_system_cast',
+      'check_signatures',
+    ];
+
     function runStages(stages) {
       (async () => {
         for(stage of stages){
@@ -158,11 +178,7 @@
               "method": stage
             },
             success: function(data){
-              console.table('Result: ', [stage, data])
-              changeProgressBar(stage);
-              if (stage === 'check_signatures') {
-                verdict = data['verdict'];
-              }
+              renderStageResult(stage, data);
             },
             error: function(a, b, c) {
               console.log(a, b, c)
@@ -171,6 +187,50 @@
         }
       })()
 
+    }
+
+    function renderStageResult(stage, data) {
+      console.table('Render stage result: ', [stage, data])
+
+      changeProgressBar(stage);
+
+      if (stage === 'make_file_system_cast') {
+        if (typeof data['total_site_files'] !== undefined){
+          renderCounters({'total_site_files': data['total_site_files'], 'scanned_files_counter': null})
+        }
+      }
+
+      if (stage === 'check_signatures') {
+        verdict = data['verdict'];
+        if (verdict.length > 0) {
+          renderVerdict();
+        } else {
+          renderNothingFound();
+        }
+        renderCounters({'scanned_files_counter': data['scanned_files_counter'], 'total_site_files': null})
+      }
+
+    }
+
+    function renderNothingFound() {
+      $('#progress_log').addClass('d-none');
+      $('#verdict').removeClass('d-none');
+      $('#progress_main').width('100%');
+      $('#progress_main').text('100%');
+      let txt = 'Site has beend sucessfully scanned. No malware found.';
+      $('#help_text').html(txt).css({'color': 'green'});
+    }
+
+    function renderCounters(counters){
+      if (counters.total_site_files) {
+        //$('#total_site_files').insertAdjacentText(counters.total_site_files);
+        $('#total_site_files').text(counters.total_site_files);
+        $('#total_site_files_text').show()
+      }
+      if (counters.scanned_files_counter) {
+        $('#scanned_files_counter').text(counters.scanned_files_counter);
+        $('#scanned_files_counter_text').show()
+      }
     }
 
     function renderVerdict() {
@@ -182,7 +242,7 @@
       $('#progress_main').text('100%');
 
       if (verdict.length > 0) {
-        let txt = 'You have a malware on site, please use <a href="https://cleantalk.org/help/install-uniforce-security" target="_blank">Uniforce</a> full version to detect and autocure malweres.';
+        let txt = 'You have a malware on site, please use <a href="https://cleantalk.org/help/install-uniforce-security" target="_blank">Uniforce</a> full version to detect and autocure malwares.';
         $('#help_text').html(txt).css({'color': 'red'});
       }
 
@@ -212,13 +272,6 @@
       $('#verdict tr:last').after(content);
     }
 
-    let stages = [
-      'prepare_file_system',
-      'receive_signatures',
-      'make_file_system_cast',
-      'check_signatures',
-    ];
-
     function changeProgressBar(stage) {
       let progressBar = $('#progress_main');
       let quantityStage = stages.length;
@@ -230,37 +283,78 @@
       progressBar.text(newValueMainBar + '%');
       progressBar[0].parentElement.ariaValueNow = newValueMainBar;
 
-     if (stage != 'make_file_system_cast') {
+      if (stage != 'make_file_system_cast') {
         $('#' + stage).width('100%');
         $('#' + stage).text('100%');
       }
     }
 
-    $(document).ready(function() {
-      runStages(stages);
+    function restoreProgressBar() {
+      let progressBar = $('#progress_main');
+      let newValueMainBar = 0;
 
-      if (verdict.length > 0) {
-        renderVerdict();
+      progressBar.attr('style', 'width:' + newValueMainBar + '%');
+      progressBar.text(newValueMainBar + '%');
+      progressBar[0].parentElement.ariaValueNow = 0;
+      $('#progress_bar_wrapper').show();
+      for (stage in stages) {
+        if (stage != 'make_file_system_cast') {
+          $('#' + stages[stage]).width('0%');
+          $('#' + stages[stage]).text('0%');
+        }
       }
+      $('#progress_log').removeClass('d-none');
+    }
+
+    function restoreVerdict() {
+      let verdictElement = $('#verdict');
+      verdictElement.empty();
+      verdictElement.append(
+              '                <tbody><tr>\n' +
+              '                  <th>path</th>\n' +
+              '                  <th>detected</th>\n' +
+              '                  <th>last modified</th>\n' +
+              '                </tr></tbody>'
+      )
+      verdictElement.addClass('d-none');
+    }
+
+    function restorePageBeforeScan() {
+      $('#help_text').html('Process of scanning, please don\'t leave this page.').css({"color": "black"});
+      $('#scan_info_block').show();
+      restoreProgressBar();
+      restoreVerdict();
+    }
+
+    function ctSecurityScanReady() {
+      $('#perform_scan_button').click(function () {
+        restorePageBeforeScan()
+        runStages(stages);
+      })
 
       // Adding to bookmarks
       let triggerBookmark = $(".js-bookmark");
       triggerBookmark.click(function() {
         if (window.sidebar && window.sidebar.addPanel) { // Firefox <23
-            window.sidebar.addPanel(document.title,window.location.href,'');
+          window.sidebar.addPanel(document.title,window.location.href,'');
         } else if (window.external && ('AddFavorite' in window.external)) {
-            // Internet Explorer
-            window.external.AddFavorite(location.href,document.title);
+          // Internet Explorer
+          window.external.AddFavorite(location.href,document.title);
         } else if (window.opera && window.print || window.sidebar && ! (window.sidebar instanceof Node)) {
-            // Opera <15 и Firefox >23
-            triggerBookmark.attr('rel', 'sidebar').attr('title', document.title);
-            return true;
+          // Opera <15 и Firefox >23
+          triggerBookmark.attr('rel', 'sidebar').attr('title', document.title);
+          return true;
         } else {
-            alert('You can bookmark this page by pressing ' + (navigator.userAgent.toLowerCase().indexOf('mac') != - 1 ? 'Command/Cmd' : 'CTRL') + ' + D on your keyboard.');
+          alert('You can bookmark this page by pressing ' + (navigator.userAgent.toLowerCase().indexOf('mac') != - 1 ? 'Command/Cmd' : 'CTRL') + ' + D on your keyboard.');
         }
         return false;
       });
+    }
+
+    $(document).ready(function() {
+      ctSecurityScanReady();
     });
+
   </script>
   </div>
 </body>
