@@ -11,6 +11,8 @@ class CTSecurityScanRouter
      */
     public static function matchRoute()
     {
+        $dev_mode = isset($_GET['dev_mode']) && $_GET['dev_mode'] == 1 ?: false;
+
         if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             $methods = [
                 'prepare_file_system',
@@ -44,13 +46,18 @@ class CTSecurityScanRouter
             exit();
         }
 
-        if ( !CTSecurityScanService::isHashExist() ) {
-            echo CTSecurityScanView::renderPreload();
+        if ($dev_mode) {
+            echo CTSecurityScanView::renderScanPage(true);
+            exit();
+        } else {
+            if ( !CTSecurityScanService::isHashExist() ) {
+                echo CTSecurityScanView::renderPreload();
+                exit();
+            }
+
+            echo CTSecurityScanView::renderScanPage();
             exit();
         }
-
-        echo CTSecurityScanView::renderScanPage();
-        exit();
     }
 
     /**
@@ -73,11 +80,14 @@ class CTSecurityScanView
      * @var string
      */
     public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/preload.html";
-
     /**
      * @var string
      */
     public static $scanUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/scan.html";
+    /**
+     * @var string
+     */
+    public static $devModeScanUrl = __DIR__ . "/scan.html";
 
     /**
      * Render preload HTML layout.
@@ -98,14 +108,16 @@ class CTSecurityScanView
 
     /**
      * Render Scanner HTML layout.
-     *
+     * @param bool $dev_mode If isset, will use self::$devModeScanUrl instead of the Github source
      * @return false|string
      */
-    public static function renderScanPage()
+    public static function renderScanPage($dev_mode = false)
     {
         // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         // @ToDo The method have to return only a `string`. Other types must be handled as errors.
-        return file_get_contents(self::$scanUrl);
+        return !$dev_mode
+            ? file_get_contents(self::$scanUrl)
+            : file_get_contents(self::$devModeScanUrl);
     }
 }
 
@@ -224,14 +236,25 @@ class CTSecurityScanService
      */
     public static function receiveSignatures()
     {
-        $signatures = file_get_contents(self::$signatures_url);
+        $signatures = @file_get_contents(self::$signatures_url);
+
+        if (false === $signatures) {
+            return false;
+        }
+
         $content = @gzdecode($signatures);
         if ( $content === false ) {
             return false;
         }
 
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+
+        if (!is_dir($dir_name) || !is_writable($dir_name)) {
+            return false;
+        }
+
         $write_result = @file_put_contents($dir_name . self::$signatures_file, $content);
+
         if ( $write_result === false ) {
             return false;
         }
@@ -288,9 +311,34 @@ class CTSecurityScanService
         }
 
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-        $scan = fopen($dir_name . self::$scan_file, 'r');
+        if (!is_dir($dir_name) || !is_readable($dir_name)) {
+            return ['status' => 'Fail', 'error' => 'Directory is not readable ' . $dir_name];
+        }
 
-        $signatures = array_map('str_getcsv', explode("\n", file_get_contents($dir_name . self::$signatures_file)));
+        $csv_file_name = $dir_name . self::$scan_file;
+
+        if (!is_file($csv_file_name) || !is_readable($csv_file_name)) {
+            return ['status' => 'Fail', 'error' => 'File is not readable ' . $csv_file_name];
+        }
+
+        $scan = fopen($csv_file_name, 'r');
+
+        if (false === $scan) {
+            return ['status' => 'Fail', 'error' => 'Cannot open stream ' . $csv_file_name];
+        }
+
+        $signatures_file_name = $dir_name . self::$signatures_file;
+
+        if (!is_file($csv_file_name) || !is_readable($csv_file_name)) {
+            return ['status' => 'Fail', 'error' => 'File is not readable ' . $signatures_file_name];
+        }
+
+        $signatures_content = @file_get_contents($signatures_file_name);
+        if (empty($signatures_content)) {
+            return ['status' => 'Fail', 'error' => 'Signatures file is empty or damaged ' . $signatures_content];
+        }
+
+        $signatures = array_map('str_getcsv', explode("\n", $signatures_content));
         $verdict = [];
         while ( $file = fgetcsv($scan) ) {
             $path = $file[0];
