@@ -308,7 +308,7 @@ class CTSecurityScanService
 
 
             foreach ( $signatures as $signature ) {
-                if ( $signature[3] === "'FILE'" ) {
+                if ( isset($signature[3], $signature[2], $signature[1]) && $signature[3] === "'FILE'" ) {
                     if ( "'$hash'" === $signature[2] ) {
                         $verdict[] = [$path, $signature[1], $file[1]];
                     }
