@@ -125,12 +125,12 @@
 
           <div class="block-legend-ps">
             <p>
-              * Website total files - only executable files (*.php) except for 
+              * Website total files - only executable files (*.php) except for
               the quarantined files, files of zero size and files larger than the acceptable size (2 MB).
               Files scanned - files have been checked. Some files will be added to the scan if the scanner deems it necessary.
             </p>
             <p>
-              This version of Uniforce just a malware scanner that you have to run it yourself. If you need Automatically daily 
+              This version of Uniforce just a malware scanner that you have to run it yourself. If you need Automatically daily
               scans, Brute-Force protection, Web application firewall and Security FireWall you are welcome to download the full
               version of Uniforce <a href="https://cleantalk.org/help/install-security">https://cleantalk.org/help/install-security</a>
             </p>
@@ -146,26 +146,31 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script>
     let verdict = [];
-    function runStage(stage) {
-      $.ajax({
-          url: document.location.href,
-          method: 'POST',
-          dataType: 'json',
-          async: true,
-          data: {
-            "method": stage
-          },
-          success: function(data){
-            console.log(data)
-            changeProgressBar(stage);
-            if (stage === 'check_signatures') {
-              verdict = data['verdict'];
-            }
-          },
-          error: function(a, b, c) {
-            console.log(a, b, c)
-          }
-      });
+    function runStages(stages) {
+      (async () => {
+        for(stage of stages){
+          await $.ajax({
+            url: document.location.href,
+            method: 'POST',
+            dataType: 'json',
+            async: true,
+            data: {
+              "method": stage
+            },
+            success: function(data){
+              console.table('Result: ', [stage, data])
+              changeProgressBar(stage);
+              if (stage === 'check_signatures') {
+                verdict = data['verdict'];
+              }
+            },
+            error: function(a, b, c) {
+              console.log(a, b, c)
+            },
+          });
+        }
+      })()
+
     }
 
     function renderVerdict() {
@@ -218,12 +223,12 @@
       let progressBar = $('#progress_main');
       let quantityStage = stages.length;
       let increaseValue = 100/quantityStage;
-      let currentValueMainBar = $('#progress_main')[0].parentElement.ariaValueNow;
+      let currentValueMainBar = progressBar[0].parentElement.ariaValueNow;
       let newValueMainBar = Number(increaseValue) + Number(currentValueMainBar);
 
-      $('#progress_main').attr('style', 'width:' + newValueMainBar + '%');
-      $('#progress_main').text(newValueMainBar + '%');
-      $('#progress_main')[0].parentElement.ariaValueNow = newValueMainBar;
+      progressBar.attr('style', 'width:' + newValueMainBar + '%');
+      progressBar.text(newValueMainBar + '%');
+      progressBar[0].parentElement.ariaValueNow = newValueMainBar;
 
      if (stage != 'make_file_system_cast') {
         $('#' + stage).width('100%');
@@ -232,9 +237,7 @@
     }
 
     $(document).ready(function() {
-      stages.forEach(stage => {
-        runStage(stage);
-      });
+      runStages(stages);
 
       if (verdict.length > 0) {
         renderVerdict();
@@ -247,17 +250,18 @@
             window.sidebar.addPanel(document.title,window.location.href,'');
         } else if (window.external && ('AddFavorite' in window.external)) {
             // Internet Explorer
-            window.external.AddFavorite(location.href,document.title); 
+            window.external.AddFavorite(location.href,document.title);
         } else if (window.opera && window.print || window.sidebar && ! (window.sidebar instanceof Node)) {
             // Opera <15 и Firefox >23
             triggerBookmark.attr('rel', 'sidebar').attr('title', document.title);
             return true;
-        } else { 
+        } else {
             alert('You can bookmark this page by pressing ' + (navigator.userAgent.toLowerCase().indexOf('mac') != - 1 ? 'Command/Cmd' : 'CTRL') + ' + D on your keyboard.');
         }
         return false;
       });
     });
   </script>
+  </div>
 </body>
 </html>
