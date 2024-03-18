@@ -121,7 +121,7 @@ class CTSecurityScanView
             }
             $work_file = self::$devModeScanUrl;
         } else {
-            $work_file = file_get_contents(self::$scanUrl);
+            $work_file = self::$scanUrl;
         }
         return file_get_contents($work_file);
     }
