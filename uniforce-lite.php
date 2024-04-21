@@ -1,5 +1,13 @@
 <?php
 
+// 1) Download uniforce from https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip
+// 2) Unpack this into random-named directory
+// 3) Try to generate scan page by \Cleantalk\USP\Layout\Settings::draw()
+
+define('APP_NAME', 'Uniforce Lite');
+define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip');
+define('APP_DEV_MODE', true);
+
 CTSecurityScanRouter::matchRoute();
 
 class CTSecurityScanRouter
@@ -46,18 +54,13 @@ class CTSecurityScanRouter
             exit();
         }
 
-        if ($dev_mode) {
-            echo CTSecurityScanView::renderScanPage(true);
-            exit();
-        } else {
-            if ( !CTSecurityScanService::isHashExist() ) {
-                echo CTSecurityScanView::renderPreload();
-                exit();
-            }
-
-            echo CTSecurityScanView::renderScanPage();
+        if ( ! UniforceLiteApp::isHashExist() ) {
+            echo CTSecurityScanView::renderPreload();
             exit();
         }
+
+        echo CTSecurityScanView::renderScanPage();
+        exit();
     }
 
     /**
@@ -71,6 +74,69 @@ class CTSecurityScanRouter
     {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data);
+    }
+}
+
+class UniforceLiteApp
+{
+    public static function getAppSlug()
+    {
+        return strtolower(str_replace(' ', '-', APP_NAME));
+    }
+
+    public static function getAppFileName()
+    {
+        return self::getAppSlug() . '.php';
+    }
+    /**
+     * Security unique token generating.
+     *
+     * @return string
+     */
+    public static function generateToken()
+    {
+        if ( APP_DEV_MODE ) {
+            return '';
+        }
+        $token = md5((string)rand(1000, 9999));
+        $token = substr($token, 0, 6);
+        rename(__FILE__, substr(__FILE__, 0, -4) . '_' . $token . '.php');
+
+        return $token;
+    }
+
+    /**
+     * Checking if the main file contains unique hash in its filename.
+     * Simple: is the application was installed and is ready to work.
+     *
+     * @return bool
+     */
+    public static function isHashExist()
+    {
+        if ( ! APP_DEV_MODE && basename(__FILE__) === self::getAppFileName() ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Makes new folder to contain scanner data.
+     *
+     * @return void
+     */
+    public static function prepareFS()
+    {
+        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+        if ( !is_dir($dir_name) ) {
+            mkdir($dir_name);
+            file_put_contents($dir_name . 'index.php', '<?php' . PHP_EOL);
+        }
+    }
+
+    public static function getRemoteFile($url)
+    {
+
     }
 }
 
@@ -98,7 +164,7 @@ class CTSecurityScanView
     {
         // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         $preload = file_get_contents(self::$preloadUrl);
-        $token = CTSecurityScanService::generateToken();
+        $token = UniforceLiteApp::generateToken();
         $html_addition = '<script>var ct_sec_token = "' . $token . '";</script>';
         $preload = preg_replace('/<\/body>(\s|<.*>)*<\/html>\s*$/i', $html_addition . '</body></html>', $preload, 1);
 
@@ -115,6 +181,11 @@ class CTSecurityScanView
     {
         // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         // @ToDo The method have to return only a `string`. Other types must be handled as errors.
+
+	    self::generateAppDirectory();
+		self::downloadApp();
+		return self::renderScanPage();
+
         if ($dev_mode) {
             if (!file_exists(self::$devModeScanUrl)) {
                 @file_put_contents(self::$devModeScanUrl, file_get_contents(self::$scanUrl));
@@ -126,6 +197,8 @@ class CTSecurityScanView
         return file_get_contents($work_file);
     }
 }
+
+
 
 class CTSecurityScanHandler
 {
@@ -192,48 +265,6 @@ class CTSecurityScanService
      */
     private static $max_file_size = 2621440; // 2.5 MB
 
-    /**
-     * Security unique token generating.
-     *
-     * @return string
-     */
-    public static function generateToken()
-    {
-        $token = md5((string)rand(1000, 9999));
-        $token = substr($token, 0, 6);
-        rename(__FILE__, substr(__FILE__, 0, -4) . '_' . $token . '.php');
-
-        return $token;
-    }
-
-    /**
-     * Checking if the main file contains unique hash in its filename.
-     * Simple: is the application was installed and is ready to work.
-     *
-     * @return bool
-     */
-    public static function isHashExist()
-    {
-        if ( basename(__FILE__) === 'cleantalk-security-scan.php' ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Makes new folder to contain scanner data.
-     *
-     * @return void
-     */
-    public static function prepareFS()
-    {
-        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-        if ( !is_dir($dir_name) ) {
-            mkdir($dir_name);
-            file_put_contents($dir_name . 'index.php', '<?php' . PHP_EOL);
-        }
-    }
 
     /**
      * Getting signatures wrapper.
