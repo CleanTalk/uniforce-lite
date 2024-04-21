@@ -3,7 +3,7 @@
 	<description>Sniff code to check different PHP compatibility</description>
 
 	<!-- What to scan -->
-	<file>../cleantalk-security-scan.php</file>
+	<file>../uniforce-lite.php</file>
 
 	<!-- How to scan -->
 	<!-- Usage instructions: https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage -->
@@ -12,10 +12,10 @@
 	<arg name="basepath" value="./"/>
 	<arg name="exclude" value="PSR12.ControlStructures.ControlStructureSpacing"/>
 	<rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
-		<exclude-pattern>../cleantalk-security-scan.php</exclude-pattern>
+		<exclude-pattern>../uniforce-lite.php</exclude-pattern>
 	</rule>
 	<rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
-		<exclude-pattern>../cleantalk-security-scan.php</exclude-pattern>
+		<exclude-pattern>../uniforce-lite.php</exclude-pattern>
 	</rule>
 	<arg name="colors"/>
 	<arg value="n"/>

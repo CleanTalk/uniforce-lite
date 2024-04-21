@@ -27,7 +27,7 @@ class CTSecurityScanRouter
             exit();
         }
 
-        echo CTSecurityScanView::renderScanPage();
+        CTSecurityScanView::renderScanPage();
         exit();
     }
 }
@@ -91,8 +91,8 @@ class UniforceLiteApp
 
     public static function downloadApp()
     {
-        // @todo handle $app_archive errors
-        $app_archive = self::getRemoteFile(APP_CORE_FILE, APP_NAME);
+        // @todo handle self::getRemoteFile errors
+        self::getRemoteFile(APP_CORE_FILE, APP_NAME);
 
         $content = self::unzipApp(APP_NAME);
 
@@ -102,21 +102,21 @@ class UniforceLiteApp
             return false;
         }
 
-        // @todo handle $write_result errors
-        $write_result = file_put_contents($dir_name, $content);
+        // @todo handle file_put_contents errors
+        file_put_contents($dir_name, $content);
     }
 
     public static function unzipApp($app_archive)
     {
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-        $zip = new ZipArchive;
+        $zip = new ZipArchive();
         $res = $zip->open($dir_name . $app_archive);
         if ( $res === true ) {
             $zip->extractTo($dir_name);
             $zip->close();
             return unlink($dir_name . $app_archive);
         }
-        throw new Error($res);
+        throw new Exception('Error code: ' . $res);
     }
 
     public static function getRemoteFile($url, $source_file_name)
@@ -126,7 +126,7 @@ class UniforceLiteApp
         // @Todo 3) handle file_get_contents/file_put_contents errors
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
         if ( ! file_exists($dir_name . $source_file_name) ) {
-            file_put_contents($dir_name . $source_file_name, file_get_contents($url) );
+            file_put_contents($dir_name . $source_file_name, file_get_contents($url));
         }
         return  @file_get_contents($url);
     }
@@ -158,8 +158,8 @@ class CTSecurityScanView
 
     /**
      * Render Scanner HTML layout.
-     * @param bool $dev_mode If isset, will use self::$devModeScanUrl instead of the Github source
-     * @return false|string
+     *
+     * @return void
      */
     public static function renderScanPage()
     {
@@ -168,21 +168,23 @@ class CTSecurityScanView
 
         UniforceLiteApp::generateAppDirectory();
         UniforceLiteApp::downloadApp();
-		self::generateScanPage();
+        self::generateScanPage();
     }
 
+    /**
+     * @psalm-suppress UndefinedClass
+     * @ToDo remove temporary psalm suppressing
+     */
     public static function generateScanPage()
     {
         require_once(__DIR__ . '/uniforce-lite/php-usp-For-uniforce-lite/uniforce/lib/autoloader.php');
         $settings = new \Cleantalk\USP\Layout\Settings();
         $settings
-            ->add_tab( 'malware_scanner' )
-            ->add_group( 'common')
+            ->add_tab('malware_scanner')
+            ->add_group('common')
             ->setTitle('Uniforce Lite')
-            ->add_group( 'common2')
-            ->setCallback(
-                'usp_scanner__display'
-            );
+            ->add_group('common2')
+            ->setCallback('usp_scanner__display');
 
         $settings->draw();
     }

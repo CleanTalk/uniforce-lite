@@ -17,7 +17,7 @@
         limitMethodComplexity="true"
 >
     <projectFiles>
-        <file name="../cleantalk-security-scan.php" />
+        <file name="../uniforce-lite.php" />
     </projectFiles>
 
 </psalm>
