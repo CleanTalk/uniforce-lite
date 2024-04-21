@@ -6,7 +6,6 @@
 
 define('APP_NAME', 'Uniforce Lite');
 define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip');
-define('APP_DEV_MODE', true);
 
 CTSecurityScanRouter::matchRoute();
 
@@ -20,6 +19,8 @@ class CTSecurityScanRouter
     public static function matchRoute()
     {
         $dev_mode = isset($_GET['dev_mode']) && $_GET['dev_mode'] == 1 ?: false;
+
+        define('APP_DEV_MODE', $dev_mode);
 
         if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
             $methods = [
@@ -125,7 +126,7 @@ class UniforceLiteApp
      *
      * @return void
      */
-    public static function prepareFS()
+    public static function generateAppDirectory()
     {
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
         if ( !is_dir($dir_name) ) {
@@ -134,9 +135,43 @@ class UniforceLiteApp
         }
     }
 
-    public static function getRemoteFile($url)
+    public static function downloadApp()
     {
+        $app_archive = self::getRemoteFile(APP_CORE_FILE, 'app.zip');
+        $content = self::unsipApp($app_archive);
 
+        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+
+        if (!is_dir($dir_name) || !is_writable($dir_name)) {
+            return false;
+        }
+
+        $write_result = file_put_contents($dir_name, $content);
+    }
+
+    public static function unsipApp($app_archive)
+    {
+        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+        $zip = new ZipArchive;
+        $res = $zip->open($dir_name . 'app.zip');
+        if ( $res === true ) {
+            $zip->extractTo($dir_name);
+            $zip->close();
+            return true;
+        }
+        throw new Error($res);
+    }
+
+    public static function getRemoteFile($url, $source_file_name)
+    {
+        // @Todo 1) validate $url
+        // @Todo 2) validate $url
+        // @Todo 3) handle file_get_contents/file_put_contents errors
+        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+        if ( ! file_exists($dir_name . $source_file_name) ) {
+            file_put_contents($dir_name . $source_file_name, file_get_contents($url) );
+        }
+        return  @file_get_contents($url);
     }
 }
 
@@ -182,9 +217,9 @@ class CTSecurityScanView
         // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         // @ToDo The method have to return only a `string`. Other types must be handled as errors.
 
-	    self::generateAppDirectory();
-		self::downloadApp();
-		return self::renderScanPage();
+        UniforceLiteApp::generateAppDirectory();
+        UniforceLiteApp::downloadApp();
+		return self::generateScanPage();
 
         if ($dev_mode) {
             if (!file_exists(self::$devModeScanUrl)) {
@@ -195,6 +230,22 @@ class CTSecurityScanView
             $work_file = self::$scanUrl;
         }
         return file_get_contents($work_file);
+    }
+
+    public static function generateScanPage()
+    {
+        require_once(__DIR__ . '/uniforce-lite/php-usp-For-uniforce-lite/uniforce/lib/autoloader.php');
+        $settings = new \Cleantalk\USP\Layout\Settings();
+        $settings
+            ->add_tab( 'malware_scanner' )
+            ->add_group( 'common')
+            ->setTitle('Uniforce Lite')
+            ->add_group( 'common2')
+            ->setCallback(
+                'usp_scanner__display'
+            );
+
+        $settings->draw();
     }
 }
 
