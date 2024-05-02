@@ -107,7 +107,6 @@ class UniforceLiteApp
         if (!is_dir($dir_name) || !is_writable($dir_name)) {
             return false;
         }
-        $dir_name = $dir_name . 'php-usp-For-uniforce-lite\uniforce\index.php';
         
         // @todo handle file_put_contents errors
         file_put_contents($dir_name, $content);
