@@ -109,7 +109,7 @@ class UniforceLiteApp
         }
         
         // @todo handle file_put_contents errors
-        file_put_contents($dir_name, $content);
+        //file_put_contents($dir_name, $content);
     }
 
     public static function unzipApp($app_archive)
