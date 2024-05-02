@@ -6,6 +6,12 @@
 
 define('APP_NAME', 'Uniforce Lite');
 define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip');
+/*if ( ! defined('DS') ) {
+    define( 'DS', DIRECTORY_SEPARATOR );
+}
+define( 'CT_USP_INC', realpath(__DIR__ ) . DS );
+define( 'CT_USP_ROOT', realpath( CT_USP_INC . '..') . DS );
+define( 'CT_USP_DATA', CT_USP_ROOT . 'data' . DS );*/
 
 CTSecurityScanRouter::matchRoute();
 
@@ -101,7 +107,8 @@ class UniforceLiteApp
         if (!is_dir($dir_name) || !is_writable($dir_name)) {
             return false;
         }
-
+        $dir_name = $dir_name . 'php-usp-For-uniforce-lite\uniforce\index.php';
+        
         // @todo handle file_put_contents errors
         file_put_contents($dir_name, $content);
     }
@@ -165,7 +172,6 @@ class CTSecurityScanView
     {
         // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
         // @ToDo The method have to return only a `string`. Other types must be handled as errors.
-
         UniforceLiteApp::generateAppDirectory();
         UniforceLiteApp::downloadApp();
         self::generateScanPage();
@@ -177,7 +183,10 @@ class CTSecurityScanView
      */
     public static function generateScanPage()
     {
-        require_once(__DIR__ . '/uniforce-lite/php-usp-For-uniforce-lite/uniforce/lib/autoloader.php');
+       /* require_once(__DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . '/php-usp-For-uniforce-lite/uniforce/lib/autoloader.php');
+        require_once(__DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . '/php-usp-For-uniforce-lite/uniforce/inc/scanner.php');
+        require_once(__DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . '/php-usp-For-uniforce-lite/uniforce/inc/functions.php');
+
         $settings = new \Cleantalk\USP\Layout\Settings();
         $settings
             ->add_tab('malware_scanner')
@@ -186,6 +195,23 @@ class CTSecurityScanView
             ->add_group('common2')
             ->setCallback('usp_scanner__display');
 
-        $settings->draw();
+        $settings->draw();*/
+
+        $old_path = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . 'php-usp-For-uniforce-lite/uniforce/';
+        $files_uniforce = scandir($old_path);
+        $folder_uniforce = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+
+        if ($files_uniforce && file_exists($old_path)) {
+            foreach ($files_uniforce as $key => $value) {
+                $old_path_file = $old_path . $value;
+                $new_paf_file = $folder_uniforce . $value;
+                if (file_exists($old_path_file) && $old_path_file[-1] != '.') {
+                    rename($old_path_file, $new_paf_file);
+                }
+            }
+        }
+
+        header('Location: http://smf-clean.talk/' . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . 'router.php?first_load=1');
+        exit( );
     }
 }
