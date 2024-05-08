@@ -5,6 +5,7 @@
 !/tests/*
 !/README.md
 !/composer.json
-!/cleantalk-security-scan.php
+!/uniforce-lite.php
 !/preload.html
 !/scan.html
+
