@@ -1,17 +1,7 @@
 <?php
 
-// 1) Download uniforce from https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip
-// 2) Unpack this into random-named directory
-// 3) Try to generate scan page by \Cleantalk\USP\Layout\Settings::draw()
-
 define('APP_NAME', 'Uniforce Lite');
 define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip');
-/*if ( ! defined('DS') ) {
-    define( 'DS', DIRECTORY_SEPARATOR );
-}
-define( 'CT_USP_INC', realpath(__DIR__ ) . DS );
-define( 'CT_USP_ROOT', realpath( CT_USP_INC . '..') . DS );
-define( 'CT_USP_DATA', CT_USP_ROOT . 'data' . DS );*/
 
 CTSecurityScanRouter::matchRoute();
 
@@ -99,17 +89,7 @@ class UniforceLiteApp
     {
         // @todo handle self::getRemoteFile errors
         self::getRemoteFile(APP_CORE_FILE, APP_NAME);
-
-        $content = self::unzipApp(APP_NAME);
-
-        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-
-        if (!is_dir($dir_name) || !is_writable($dir_name)) {
-            return false;
-        }
-        
-        // @todo handle file_put_contents errors
-        //file_put_contents($dir_name, $content);
+        self::unzipApp(APP_NAME);
     }
 
     public static function unzipApp($app_archive)
@@ -182,35 +162,11 @@ class CTSecurityScanView
      */
     public static function generateScanPage()
     {
-       /* require_once(__DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . '/php-usp-For-uniforce-lite/uniforce/lib/autoloader.php');
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . '/php-usp-For-uniforce-lite/uniforce/inc/scanner.php');
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . '/php-usp-For-uniforce-lite/uniforce/inc/functions.php');
+        $uniforce_path = substr(basename(__FILE__), 0, -4) . '/php-usp-For-uniforce-lite/uniforce';
+        $protocol = ! in_array($_SERVER['HTTPS'], ['off', '']) || $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
 
-        $settings = new \Cleantalk\USP\Layout\Settings();
-        $settings
-            ->add_tab('malware_scanner')
-            ->add_group('common')
-            ->setTitle('Uniforce Lite')
-            ->add_group('common2')
-            ->setCallback('usp_scanner__display');
-
-        $settings->draw();*/
-
-        $old_path = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . 'php-usp-For-uniforce-lite/uniforce/';
-        $files_uniforce = scandir($old_path);
-        $folder_uniforce = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-
-        if ($files_uniforce && file_exists($old_path)) {
-            foreach ($files_uniforce as $key => $value) {
-                $old_path_file = $old_path . $value;
-                $new_paf_file = $folder_uniforce . $value;
-                if (file_exists($old_path_file) && $old_path_file[-1] != '.') {
-                    rename($old_path_file, $new_paf_file);
-                }
-            }
-        }
-
-        header('Location: http://smf-clean.talk/' . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR . 'router.php?first_load=1');
-        exit( );
+        header("Location: {$protocol}{$host}/{$uniforce_path}/router.php?uniforce_lite=1&tab=malware_scanner");
+        exit();
     }
 }
