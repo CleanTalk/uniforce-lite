@@ -123,7 +123,7 @@ class CTSecurityScanView
     /**
      * @var string
      */
-    public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/master/preload.html";
+    public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/dev/preload.html";
 
     /**
      * Render preload HTML layout.
@@ -164,9 +164,10 @@ class CTSecurityScanView
     {
         $uniforce_path = substr(basename(__FILE__), 0, -4) . '/php-usp-For-uniforce-lite/uniforce';
         $protocol = ! in_array($_SERVER['HTTPS'], ['off', '']) || $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://';
+        $port = $_SERVER['SERVER_PORT'] == 80 ? '' : ':' . $_SERVER['SERVER_PORT'];
         $host = $_SERVER['HTTP_HOST'];
 
-        header("Location: {$protocol}{$host}/{$uniforce_path}/router.php?uniforce_lite=1&tab=malware_scanner");
+        header("Location: {$protocol}{$host}{$port}/{$uniforce_path}/router.php?uniforce_lite=1&tab=malware_scanner");
         exit();
     }
 }
