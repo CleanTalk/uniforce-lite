@@ -3,8 +3,12 @@
 define('APP_NAME', 'Uniforce Lite');
 define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip');
 
+// entry point
 CTSecurityScanRouter::matchRoute();
 
+/**
+ * The routing for the scan.
+ */
 class CTSecurityScanRouter
 {
     /**
@@ -28,13 +32,32 @@ class CTSecurityScanRouter
     }
 }
 
+/**
+ * The view for the scan.
+ */
 class UniforceLiteApp
 {
+    /**
+     * Generates a URL-friendly slug from the application name.
+     *
+     * This method converts the application name defined by the constant APP_NAME
+     * to a lowercase string with spaces replaced by hyphens.
+     *
+     * @return string The URL-friendly slug of the application name.
+     */
     public static function getAppSlug()
     {
         return strtolower(str_replace(' ', '-', APP_NAME));
     }
 
+    /**
+     * Retrieves the filename of the application.
+     *
+     * This method generates a filename for the application by converting the application name
+     * to a URL-friendly slug and appending the '.php' extension.
+     *
+     * @return string The filename of the application.
+     */
     public static function getAppFileName()
     {
         return self::getAppSlug() . '.php';
@@ -85,13 +108,27 @@ class UniforceLiteApp
         }
     }
 
+    /**
+     * Downloads and unzips the application core file.
+     *
+     * This method handles the process of downloading the application core file from a remote URL
+     * and then unzipping it into the appropriate directory.
+     *
+     * @return void
+     */
     public static function downloadApp()
     {
-        // @todo handle self::getRemoteFile errors
         self::getRemoteFile(APP_CORE_FILE, APP_NAME);
         self::unzipApp(APP_NAME);
     }
 
+    /**
+     * Unzips the specified application archive into a directory.
+     *
+     * @param string $app_archive The name of the archive file to unzip.
+     * @return void
+     * @throws Exception If there is an error opening the archive.
+     */
     public static function unzipApp($app_archive)
     {
         $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
@@ -100,24 +137,45 @@ class UniforceLiteApp
         if ( $res === true ) {
             $zip->extractTo($dir_name);
             $zip->close();
-            return unlink($dir_name . $app_archive);
+            unlink($dir_name . $app_archive);
+            return;
         }
         throw new Exception('Error code: ' . $res);
     }
 
+    /**
+     * Downloads a remote file and saves it locally.
+     *
+     * @param string $url The URL of the remote file to download.
+     * @param string $source_file_name The name to save the downloaded file as.
+     * @return void
+     * @throws Exception If the URL is invalid or if there are errors with file operations.
+     */
     public static function getRemoteFile($url, $source_file_name)
     {
-        // @Todo 1) validate $url
-        // @Todo 2) validate $url
-        // @Todo 3) handle file_get_contents/file_put_contents errors
-        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
-        if ( ! file_exists($dir_name . $source_file_name) ) {
-            file_put_contents($dir_name . $source_file_name, file_get_contents($url));
+        if (!ini_get('allow_url_fopen')) {
+            throw new Exception('allow_url_fopen is not enabled. Please enable it in your PHP configuration.');
         }
-        return  @file_get_contents($url);
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new Exception('Invalid URL: ' . $url);
+        }
+
+        $dir_name = __DIR__ . DIRECTORY_SEPARATOR . substr(basename(__FILE__), 0, -4) . DIRECTORY_SEPARATOR;
+
+        if (!file_exists($dir_name . $source_file_name)) {
+            $contents = file_get_contents($url);
+            if ($contents === false) {
+                throw new Exception('Error downloading file from URL: ' . $url);
+            }
+            file_put_contents($dir_name . $source_file_name, $contents);
+        }
     }
 }
 
+/**
+ * The view for the scan.
+ */
 class CTSecurityScanView
 {
     /**
@@ -128,17 +186,24 @@ class CTSecurityScanView
     /**
      * Render preload HTML layout.
      *
-     * @return array|string|null
+     * @return string
+     * @throws Exception If there is an error downloading or reading the preload HTML file.
      */
     public static function renderPreload()
     {
-        // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
+        if (!ini_get('allow_url_fopen')) {
+            throw new Exception('allow_url_fopen is not enabled. Please enable it in your PHP configuration.');
+        }
+
         $preload = file_get_contents(self::$preloadUrl);
+        if ($preload === false) {
+            throw new Exception('Error downloading or reading the preload HTML file.');
+        }
+
         $token = UniforceLiteApp::generateToken();
         $html_addition = '<script>var ct_sec_token = "' . $token . '";</script>';
         $preload = preg_replace('/<\/body>(\s|<.*>)*<\/html>\s*$/i', $html_addition . '</body></html>', $preload, 1);
 
-        // @ToDo The method have to return only a `string`. Other types must be handled as errors.
         return $preload;
     }
 
@@ -149,16 +214,13 @@ class CTSecurityScanView
      */
     public static function renderScanPage()
     {
-        // @ToDo Strong depends on fopen wrappers https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen
-        // @ToDo The method have to return only a `string`. Other types must be handled as errors.
         UniforceLiteApp::generateAppDirectory();
         UniforceLiteApp::downloadApp();
         self::generateScanPage();
     }
 
     /**
-     * @psalm-suppress UndefinedClass
-     * @ToDo remove temporary psalm suppressing
+     * Generate Scanner HTML layout.
      */
     public static function generateScanPage()
     {
