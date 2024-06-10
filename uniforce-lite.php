@@ -181,7 +181,7 @@ class CTSecurityScanView
     /**
      * @var string
      */
-    public static $preloadUrl = "https://github.com/CleanTalk/ct-security-scan/raw/dev/preload.html";
+    public static $preloadUrl = "https://github.com/CleanTalk/uniforce-lite/raw/dev/preload.html";
 
     /**
      * Render preload HTML layout.
