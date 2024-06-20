@@ -11,6 +11,15 @@ Features:
 - just upload the file to the site-root directory - no further installation needs
 - only the Malware Scanner is available in this version
 
+Features available after installation full version UniForce:
+- Brute-force Protection
+- Security Report every 24 hours
+- Security FireWall to block access to your website by IP(Black & White Lists)
+- Security FireWall to block to access to your website by countries
+- Usage of the CleanTalk Database of Dangerous IP Addresses
+- Malware Scanner
+- Web Application Firewall
+
 To get the [full version](https://cleantalk.org/help/install-uniforce-security) of the scanner, please [purchase](https://p.cleantalk.org/?featured=&product_id=4) the license.  
 
 ## Installation
