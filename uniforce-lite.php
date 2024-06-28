@@ -1,7 +1,7 @@
 <?php
 
 define('APP_NAME', 'Uniforce Lite');
-define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/For-uniforce-lite.zip');
+define('APP_CORE_FILE', 'https://github.com/CleanTalk/php-usp/archive/refs/heads/master.zip');
 
 // entry point
 CTSecurityScanRouter::matchRoute();
@@ -224,7 +224,7 @@ class CTSecurityScanView
      */
     public static function generateScanPage()
     {
-        $uniforce_path = substr(basename(__FILE__), 0, -4) . '/php-usp-For-uniforce-lite/uniforce';
+        $uniforce_path = substr(basename(__FILE__), 0, -4) . '/php-usp-master/uniforce';
         $protocol = ! in_array($_SERVER['HTTPS'], ['off', '']) || $_SERVER['SERVER_PORT'] == 443 ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'];
 
